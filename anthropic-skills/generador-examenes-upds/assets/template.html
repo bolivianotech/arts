@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>{{TITULO_EXAMEN}} — {{MATERIA_NOMBRE}} ({{MATERIA_CODIGO}}) · UPDS {{ANIO}}</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { ios: { blue:'#007AFF', green:'#34C759', red:'#FF3B30', orange:'#FF9500',
+                     purple:'#AF52DE', teal:'#5AC8FA', bg:'#F2F2F7', sep:'#E5E5EA', second:'#6C6C70' } },
+    fontFamily: { sans:['-apple-system','BlinkMacSystemFont','Segoe UI','system-ui','sans-serif'] }
+  }}
+}
+</script>
+<style>
+*{-webkit-tap-highlight-color:transparent}
+body{-webkit-font-smoothing:antialiased;background:#F2F2F7}
+.card{background:#fff;border-radius:18px;box-shadow:0 2px 8px rgba(0,0,0,.07),0 0 1px rgba(0,0,0,.06)}
+.opt{border:2px solid #E5E5EA;border-radius:13px;transition:all .16s ease;cursor:pointer;user-select:none}
+.opt:hover{border-color:#C6C6C8;background:#FAFAFA}
+.opt.sel{border-color:#007AFF;background:#EBF5FF}
+.opt.ok{border-color:#34C759!important;background:#E8F8EE!important}
+.opt.fail{border-color:#FF3B30!important;background:#FFF0EE!important}
+.opt.missed{border-color:#FF9500!important;background:#FFF5E6!important}
+.opt:active{transform:scale(.98)}
+.tf{border:2px solid #E5E5EA;border-radius:13px;cursor:pointer;transition:all .16s ease;user-select:none;padding:12px;text-align:center;font-weight:600}
+.tf.sel-true{border-color:#34C759;background:#E8F8EE;color:#1A7A34}
+.tf.sel-false{border-color:#FF3B30;background:#FFF0EE;color:#C0392B}
+.tf.ok{border-color:#34C759;background:#E8F8EE}
+.tf.fail{border-color:#FF3B30;background:#FFF0EE}
+.tf:active{transform:scale(.98)}
+.chip{cursor:pointer;user-select:none;border:2px solid #007AFF;color:#007AFF;background:#EBF5FF;border-radius:10px;padding:5px 14px;font-weight:600;font-size:.875rem;transition:all .15s ease;display:inline-block}
+.chip:hover{background:#D6EBFF}
+.chip.active{background:#007AFF;color:#fff;transform:scale(1.05);box-shadow:0 4px 12px rgba(0,122,255,.3)}
+.chip.used{opacity:.3;pointer-events:none}
+.blank{display:inline-flex;align-items:center;justify-content:center;min-width:148px;height:36px;border:2px dashed #C6C6C8;border-radius:10px;background:#F9F9FB;color:#6C6C70;font-size:.875rem;font-weight:600;cursor:pointer;vertical-align:middle;margin:0 3px;transition:all .15s ease}
+.blank:hover{border-color:#007AFF;background:#EBF5FF;color:#007AFF}
+.blank.ready{border-color:#007AFF;background:#EBF5FF;color:#0055CC;border-style:solid}
+.blank.ok{border-color:#34C759;background:#E8F8EE;color:#1A7A34;border-style:solid}
+.blank.fail{border-color:#FF3B30;background:#FFF0EE;color:#C0392B;border-style:solid}
+.stab{border-radius:10px;padding:7px 14px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s ease;border:2px solid transparent;white-space:nowrap}
+.stab.active{color:#fff}
+.progress-track{background:#E5E5EA;border-radius:99px;height:6px}
+.progress-fill{background:#007AFF;border-radius:99px;height:6px;transition:width .5s cubic-bezier(.34,1.56,.64,1)}
+.section-in{animation:sIn .3s ease}
+@keyframes sIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.score-ring{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.cb-box{width:20px;height:20px;border:2px solid #C6C6C8;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s ease}
+.cb-box.checked{background:#007AFF;border-color:#007AFF}
+.cb-box.ok-check{background:#34C759;border-color:#34C759}
+.cb-box.fail-check{background:#FF3B30;border-color:#FF3B30}
+.cb-box.missed-check{background:#FF9500;border-color:#FF9500}
+input[type=text],input[type=email],input[type=number],input[type=datetime-local]{outline:none;transition:border-color .15s ease}
+input[type=text]:focus,input[type=email]:focus,input[type=number]:focus,input[type=datetime-local]:focus{border-color:#007AFF}
+.insights-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.insight-card{border-radius:10px;padding:12px;font-size:.85rem;line-height:1.5;border-left:4px solid;background:#f9f9fb}
+.insight-card.high{border-left-color:#FF3B30;background:#FFF0EE}
+.insight-card.high .ic-title{color:#C0392B;font-weight:700}
+.insight-card.high .ic-text{color:#6D2826;font-size:.8rem}
+.insight-card.medium{border-left-color:#FF9500;background:#FFF5E6}
+.insight-card.medium .ic-title{color:#C67000;font-weight:700}
+.insight-card.medium .ic-text{color:#6B3F00;font-size:.8rem}
+.insight-card.low{border-left-color:#34C759;background:#E8F8EE}
+.insight-card.low .ic-title{color:#1A7A34;font-weight:700}
+.insight-card.low .ic-text{color:#0D5722;font-size:.8rem}
+@media print{
+  body{background:#fff!important}
+  #app-shell,#intake-screen,#results-overlay,header,.sticky,.fixed,#bottom-nav{display:none!important}
+  #print-report{display:block!important}
+  .pr-section{page-break-before:auto}
+  .pr-q{page-break-inside:avoid;border:1px solid #e5e5ea;border-radius:10px;padding:12px;margin-bottom:10px}
+  .pr-opt{padding:5px 10px;border-radius:6px;margin-bottom:4px;font-size:.85rem}
+  .pr-ok{background:#E8F8EE;color:#1A7A34}
+  .pr-fail{background:#FFF0EE;color:#C0392B}
+  .pr-missed{background:#FFF5E6;color:#c07000}
+  .pr-neutral{color:#555}
+  .pr-just{background:#F5F5F5;border-radius:8px;padding:8px;font-size:.82rem;color:#444;margin-top:8px}
+}
+#print-report{display:none}
+</style>
+</head>
+<body class="min-h-screen">
+
+<div id="intake-screen" class="min-h-screen flex items-start justify-center py-10 px-4">
+  <div style="max-width:540px;width:100%">
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white mb-3 shadow-lg shadow-blue-200 p-2 border border-ios-sep">
+        <img id="intake-logo" alt="Logo UPDS" class="w-full h-full object-contain"/>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900">{{TITULO_EXAMEN}}</h1>
+      <p class="text-ios-second text-sm mt-1">{{MATERIA_NOMBRE}} ({{MATERIA_CODIGO}}) · UPDS {{ANIO}}</p>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div class="bg-blue-50 rounded-xl p-3">
+          <p class="text-xl font-bold text-ios-blue">{{TOTAL_PREGUNTAS}}</p>
+          <p class="text-xs text-ios-second mt-0.5">preguntas</p>
+        </div>
+        <div class="bg-orange-50 rounded-xl p-3">
+          <p class="text-xl font-bold text-orange-500">{{EXAM_MINUTES}}</p>
+          <p class="text-xs text-ios-second mt-0.5">minutos</p>
+        </div>
+        <div class="bg-green-50 rounded-xl p-3">
+          <p class="text-xl font-bold text-ios-green">{{NUM_BLOQUES}}</p>
+          <p class="text-xs text-ios-second mt-0.5">bloques</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h2 class="font-bold text-gray-800 mb-4">Datos del estudiante</h2>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-ios-second uppercase tracking-wide block mb-1">Nombre completo *</label>
+          <input id="inp-nombre" type="text" placeholder="Ej. Ana Sofia Torres Vidal"
+            class="w-full border-2 border-ios-sep rounded-xl px-4 py-3 text-sm text-gray-800"
+            oninput="checkIntake()" onchange="checkIntake()"/>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-ios-second uppercase tracking-wide block mb-1">Codigo de estudiante *</label>
+          <input id="inp-codigo" type="text" placeholder="Ej. 2023-SIS-0042"
+            class="w-full border-2 border-ios-sep rounded-xl px-4 py-3 text-sm text-gray-800"
+            oninput="checkIntake()" onchange="checkIntake()"/>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-ios-second uppercase tracking-wide block mb-1">Correo institucional *</label>
+          <input id="inp-email" type="email" placeholder="codigo@upds.edu.bo"
+            class="w-full border-2 border-ios-sep rounded-xl px-4 py-3 text-sm text-gray-800"
+            oninput="checkIntake()" onchange="checkIntake()"/>
+          <div id="lock-banner" style="display:none" class="mt-2 rounded-xl px-3 py-2.5 text-xs leading-relaxed"></div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-ios-second uppercase tracking-wide block mb-1">Fecha y hora de inicio</label>
+          <input id="inp-fecha" type="datetime-local"
+            class="w-full border-2 border-ios-sep rounded-xl px-4 py-3 text-sm text-gray-800 bg-white cursor-text"
+            oninput="checkIntake()" onchange="checkIntake()"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-5">
+      <h2 class="font-bold text-gray-800 mb-3">Declaracion de Honestidad</h2>
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 text-xs text-blue-800 leading-relaxed">
+        <p class="font-bold mb-1">{{TITULO_EXAMEN}} — {{MATERIA_NOMBRE}} ({{MATERIA_CODIGO}})</p>
+        <p>Este es el <strong>{{TITULO_EXAMEN}}</strong> de la materia {{MATERIA_NOMBRE}} y evalua: {{DECLARACION_CONTENIDO}}. <strong>Responde con honestidad</strong>, sin apoyo externo, para reflejar fielmente tu nivel real de dominio del contenido.</p>
+      </div>
+      <div class="bg-red-50 border-2 border-red-300 rounded-xl p-4 mb-4">
+        <p class="font-bold text-red-800 text-xs mb-1.5 flex items-center gap-1.5"><span class="text-base">&#128274;</span> Un solo intento por correo</p>
+        <p class="text-xs text-red-700 leading-relaxed">Este examen se puede rendir <strong>una unica vez por correo institucional</strong>. En cuanto entregues, tu resultado queda registrado en este navegador como <strong>nota final</strong> y no podras volver a rendirlo con el mismo correo: al reabrir el examen se te mostrara directamente esa nota, sin opcion de repetirlo.</p>
+      </div>
+      <div class="bg-orange-50 border-2 border-orange-300 rounded-xl p-4 mb-4">
+        <p class="font-bold text-orange-800 text-xs mb-1.5 flex items-center gap-1.5"><span class="text-base">&#128196;</span> La entrega debe ser en PDF</p>
+        <p class="text-xs text-orange-700 leading-relaxed">Al terminar, descarga el reporte y <strong>subelo a Moodle en formato PDF</strong> (usando "Guardar como PDF" en el cuadro de impresion). El reporte llevara tu <strong>codigo de verificacion unico</strong>. Cualquier entrega que no sea el PDF con ese codigo <strong>no sera calificada</strong>.</p>
+      </div>
+      <label class="flex items-start gap-3 cursor-pointer group">
+        <input id="inp-consent" type="checkbox" onchange="toggleConsent(this.checked)" onclick="checkIntake()"
+          class="mt-0.5 w-5 h-5 flex-shrink-0 cursor-pointer"
+          style="accent-color:#007AFF"/>
+        <p class="text-sm text-gray-700 leading-relaxed">
+          Declaro que las respuestas que proporcione en este examen final son <strong>completamente propias</strong>, basadas exclusivamente en mis conocimientos y sin apoyo externo, para que el resultado refleje fielmente mi nivel real de dominio de la materia. Entiendo que este es mi <strong>unico intento</strong> con este correo y que debo entregar el reporte en <strong>formato PDF</strong> para ser calificado.
+        </p>
+      </label>
+    </div>
+
+    <button id="btn-start" onclick="handleStartClick()" disabled
+      class="w-full py-4 rounded-2xl font-bold text-base bg-gray-200 text-gray-400 transition-all cursor-not-allowed">
+      Completar todos los campos para continuar
+    </button>
+
+    <p class="text-center text-xs text-ios-second mt-4 pb-6">
+      {{FOOTER_LINEA}}
+    </p>
+  </div>
+</div>
+
+<div id="app-shell" style="display:none">
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-ios-sep">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <img id="hd-logo" alt="Logo UPDS" class="w-9 h-9 rounded-lg object-contain flex-shrink-0 border border-ios-sep bg-white p-0.5"/>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs text-ios-second font-medium" id="hd-student">—</p>
+        <h1 class="text-sm font-bold text-gray-900 truncate">{{TITULO_EXAMEN}} — {{MATERIA_NOMBRE}}</h1>
+      </div>
+      <div class="text-right shrink-0">
+        <p class="text-xs text-ios-second">Tiempo</p>
+        <p id="timer" class="text-lg font-bold text-gray-800 tabular-nums">{{EXAM_MINUTES}}:00</p>
+      </div>
+    </div>
+    <div class="max-w-2xl mx-auto px-4 pb-3">
+      <div class="flex justify-between text-xs text-ios-second mb-1">
+        <span id="prog-label">Bloque 1 de 4</span>
+        <span id="prog-pct">0 / {{TOTAL_PREGUNTAS}}</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-bar" style="width:0%"></div></div>
+    </div>
+  </header>
+
+  <div class="sticky top-[92px] z-40 bg-ios-bg/95 backdrop-blur-sm py-2 border-b border-ios-sep">
+    <div class="max-w-2xl mx-auto px-3 flex gap-2 overflow-x-auto pb-0.5" style="scrollbar-width:none">
+      <button class="stab" id="tab-0" onclick="goSection(0)">— 1</button>
+      <button class="stab" id="tab-1" onclick="goSection(1)">— 2</button>
+      <button class="stab" id="tab-2" onclick="goSection(2)">— 3</button>
+      <button class="stab" id="tab-3" onclick="goSection(3)">— 4</button>
+    </div>
+  </div>
+
+  <main class="max-w-2xl mx-auto px-4 py-5 pb-32" id="main-content"></main>
+
+  <div id="bottom-nav" class="fixed bottom-0 inset-x-0 bg-white/90 backdrop-blur-md border-t border-ios-sep z-50">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex gap-3">
+      <button id="btn-prev" onclick="prevSection()" class="flex-1 py-3 rounded-2xl font-semibold text-sm border-2 border-ios-sep text-ios-second hover:bg-gray-50 transition-all">← Anterior</button>
+      <button id="btn-next" onclick="nextSection()" class="flex-1 py-3 rounded-2xl font-semibold text-sm bg-ios-blue text-white hover:bg-blue-600 transition-all active:scale-95 shadow-md shadow-blue-200">Siguiente →</button>
+      <button id="btn-submit" onclick="confirmSubmit()" style="display:none" class="flex-1 py-3 rounded-2xl font-semibold text-sm bg-ios-green text-white hover:bg-green-600 transition-all active:scale-95 shadow-md shadow-green-200">Entregar Actividad</button>
+    </div>
+  </div>
+</div>
+
+<div id="results-overlay" style="display:none" class="fixed inset-0 z-[100] bg-ios-bg overflow-y-auto">
+  <div class="max-w-2xl mx-auto px-4 py-8">
+
+    <div id="annul-banner" style="display:none" class="card p-5 border-2 border-red-400 bg-red-50 mb-4"></div>
+
+    <div class="card p-7 text-center mb-4">
+      <p class="text-xs font-semibold tracking-widest text-ios-second uppercase mb-3">Resultado del {{TITULO_EXAMEN}}</p>
+      <div class="score-ring w-36 h-36 rounded-full mx-auto mb-4 flex flex-col items-center justify-center border-8" id="score-ring">
+        <span class="text-4xl font-bold" id="score-num">--</span>
+        <span class="text-sm text-ios-second">/{{TOTAL_PREGUNTAS}}</span>
+      </div>
+      <p class="text-2xl font-bold mb-1" id="score-label">--</p>
+      <p class="text-ios-second text-sm mb-3" id="score-sub">--</p>
+      <div class="bg-gray-50 rounded-xl p-3 grid grid-cols-3 gap-2 text-sm">
+        <div><p class="text-xs text-ios-second">Estudiante</p><p class="font-semibold text-gray-800 truncate" id="res-nombre">--</p></div>
+        <div><p class="text-xs text-ios-second">Codigo</p><p class="font-semibold text-gray-800" id="res-codigo">--</p></div>
+        <div><p class="text-xs text-ios-second">Nivel</p><p class="font-semibold" id="res-grade">--</p></div>
+      </div>
+      <div class="mt-3 bg-blue-50 border border-blue-200 rounded-xl p-3">
+        <p class="text-xs text-ios-second">Codigo de verificacion (debe coincidir con el PDF entregado)</p>
+        <p class="font-bold text-ios-blue tracking-wide text-sm" id="res-veriCode">--</p>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h2 class="font-bold text-gray-800 mb-3">Resultado por seccion</h2>
+      <div id="breakdown" class="space-y-3"></div>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h2 class="font-bold text-gray-800 mb-3">Analisis de Resultados por Tema</h2>
+      <p class="text-xs text-ios-second mb-4">Basado en tus respuestas, estas son las areas con mayor y menor dominio en esta evaluacion:</p>
+      <div id="insights-container" class="insights-grid"></div>
+      <div class="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
+        <p class="font-semibold mb-1">Retroalimentacion completa disponible:</p>
+        <p>Descarga el PDF para ver cada pregunta con tu respuesta, la respuesta correcta y la justificacion detallada de todas las opciones.</p>
+      </div>
+    </div>
+
+    <div class="card p-5 border-2 border-red-300 bg-red-50 mb-4">
+      <p class="font-bold text-red-800 text-sm mb-2 flex items-center gap-1.5"><span class="text-lg">&#128196;</span> Solo se califica el PDF con tu codigo</p>
+      <ol class="text-xs text-red-700 leading-relaxed list-decimal pl-4 space-y-1">
+        <li>Toca el boton azul de abajo. Se abrira el cuadro de impresion del navegador.</li>
+        <li>En "Destino", elige <strong>Guardar como PDF</strong> (no imprimas en papel).</li>
+        <li>Sube ese archivo PDF, tal cual, a la tarea correspondiente en Moodle.</li>
+      </ol>
+      <p class="text-xs text-red-800 font-bold mt-2">Cualquier otro formato (captura de pantalla, Word, HTML) o un PDF sin tu codigo de verificacion NO sera calificado.</p>
+    </div>
+
+    <button onclick="downloadPDF()" class="w-full py-4 rounded-2xl bg-ios-blue text-white font-bold text-sm mb-4 hover:bg-blue-600 transition-all active:scale-95 shadow-md shadow-blue-200">
+      Descargar Retroalimentacion Completa (PDF)
+    </button>
+
+    <div class="card p-5 border-2 border-green-300 bg-green-50 mb-4">
+      <div class="flex gap-3 items-start">
+        <span class="text-2xl flex-shrink-0">&#10003;</span>
+        <div>
+          <p class="font-bold text-green-800 text-sm mb-2">Evaluacion entregada correctamente</p>
+          <p class="text-xs text-green-700 leading-relaxed">
+            Tu {{TITULO_EXAMEN}} de {{MATERIA_NOMBRE}} ha sido completado y quedo registrado con tu correo: este es tu <strong>unico intento</strong> y esta nota es definitiva. Descarga la retroalimentacion completa para revisar cada pregunta, tu respuesta y la justificacion de la respuesta correcta y por que las otras opciones son incorrectas.
+          </p>
+          <p class="text-xs text-green-600 font-semibold mt-2">
+            Sube el PDF descargado a Moodle antes del plazo establecido; sin ese PDF, la evaluacion no se califica.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-xs text-ios-second pb-4">
+      {{FOOTER_LINEA}}
+    </p>
+  </div>
+</div>
+
+<script>
+const LOGO_DATA_URI = 'data:image/png;base64,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';
+// =====================================================================================
+// REEMPLAZAR ESTE BLOQUE COMPLETO con las preguntas reales de la materia.
+// Reglas obligatorias (ver references/question-writing-guide.md para el detalle):
+//  - 4 secciones (bloques), una por cada tema grande del avance/silabo indicado.
+//  - Cada seccion necesita un POOL de al menos 8 preguntas (aqui solo hay 2-3 de
+//    ejemplo por brevedad); QUESTIONS_PER_SECTION elige un subconjunto al azar de
+//    ese pool en cada intento, para que el examen varie entre estudiantes.
+//  - Preguntas de escenario (2-4 lineas de contexto aplicado), nunca definiciones
+//    sueltas. Las opciones incorrectas deben ser trampas plausibles, no absurdas.
+//  - El campo "just" explica por que la correcta es correcta Y por que cada
+//    incorrecta falla especificamente (no un parrafo generico).
+//  - Sin tildes ni caracteres acentuados en los strings de preguntas (se usa asi en
+//    todo el archivo por convencion/compatibilidad); la ñ SI se conserva cuando
+//    cambia el significado de la palabra (año, diseño, etc.).
+//  - NUNCA uses un apostrofe (') dentro del texto: las cadenas usan comillas
+//    simples como delimitador JS. Si necesitas comillas dentro del texto, usa
+//    comillas dobles rectas (") -- nunca seas literal con ' en contracciones etc.
+// =====================================================================================
+const SECTIONS = [
+
+{ id:0, title:'{{BLOQUE_1_TITULO}}', icon:'\uD83D\uDCD8', color:'blue', type:'multiple',
+  desc:'{{BLOQUE_1_DESCRIPCION_CORTA}}',
+  questions:[
+    { text:'[EJEMPLO opcion multiple] Enunciado de escenario aplicado con contexto boliviano/real, terminando en una pregunta concreta.',
+      opts:['Opcion A -- distractor plausible pero incorrecto por razon especifica.','Opcion B -- la correcta, con la explicacion tecnica precisa incorporada en el propio enunciado de la opcion.','Opcion C -- distractor que invierte un concepto clave.','Opcion D -- distractor que aplica un concepto real pero fuera de contexto.'],
+      correct:1,
+      just:'Explicacion de por que B es correcta, y luego, opcion por opcion, por que A, C y D fallan especificamente (no un parrafo generico).'
+    },
+    { text:'[EJEMPLO opcion multiple 2] Otro escenario distinto que cubra un segundo subtema del bloque.',
+      opts:['Opcion A.','Opcion B.','Opcion C -- correcta.','Opcion D.'],
+      correct:2,
+      just:'Justificacion completa opcion por opcion.'
+    }
+  ]
+},
+
+{ id:1, title:'{{BLOQUE_2_TITULO}}', icon:'\uD83D\uDD0D', color:'red', type:'multiselect',
+  desc:'{{BLOQUE_2_DESCRIPCION_CORTA}}',
+  questions:[
+    { text:'[EJEMPLO seleccion multiple] Selecciona las N opciones correctas de una lista de M (indicar el numero exacto en el enunciado).',
+      opts:['Opcion correcta 1.','Opcion correcta 2.','Distractor plausible pero de otro bloque/tema.','Distractor con dato real pero no mencionado en el material del curso.'],
+      correct:[0,1],
+      just:'Por que 0 y 1 son correctas; por que 2 y 3 NO lo son, cada una con su razon especifica (p.ej. "pertenece a otro bloque", "es un dato real pero no citado en el curso, alucinacion tipica a auditar").'
+    }
+  ]
+},
+
+{ id:2, title:'{{BLOQUE_3_TITULO}}', icon:'\uD83E\uDDE9', color:'teal', type:'dragdrop',
+  desc:'{{BLOQUE_3_DESCRIPCION_CORTA}} -- completa cada enunciado con el termino correcto',
+  questions:[
+    { before:'[EJEMPLO completar espacios] Texto de contexto que termina justo antes del termino a completar: ',
+      after:' -- clausula final que refuerza o contrasta el concepto.',
+      correct:'Termino Exacto',
+      just:'Por que ese es el termino correcto y que lo distingue de conceptos relacionados vistos en el mismo bloque.'
+    },
+    { before:'[EJEMPLO 2] Otro enunciado de completar espacios sobre un subtema distinto: ',
+      after:'.',
+      correct:'Otro Termino',
+      just:'Justificacion completa.'
+    }
+  ]
+},
+
+{ id:3, title:'{{BLOQUE_4_TITULO}}', icon:'\u2696\uFE0F', color:'green', type:'truefalse',
+  desc:'{{BLOQUE_4_DESCRIPCION_CORTA}}',
+  questions:[
+    { text:'[EJEMPLO verdadero/falso] Afirmacion tecnica completa que puede ser verdadera o (mas interesante pedagogicamente) una version sutilmente invertida de un concepto real del curso.',
+      correct:false,
+      just:'FALSO. Explicar cual es el error exacto de la afirmacion y cual es la version correcta del concepto.'
+    },
+    { text:'[EJEMPLO 2] Otra afirmacion, esta vez verdadera, sobre un caso aplicado visto en el curso.',
+      correct:true,
+      just:'VERDADERO. Explicar por que, citando el material especifico del curso que lo sustenta.'
+    }
+  ]
+}
+
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const QUESTIONS_PER_SECTION = {{QUESTIONS_PER_SECTION}}; // preguntas mostradas por bloque en cada intento (se sortean de un pool mas grande)
+const TOTAL_QUESTIONS = QUESTIONS_PER_SECTION * {{NUM_BLOQUES}}; // debe coincidir con el numero de objetos en SECTIONS
+const EXAM_SECONDS = {{EXAM_MINUTES}}*60;
+const LOCK_STORAGE_KEY = '{{LOCK_KEY_UNICA}}'; // clave unica de localStorage: distinta por cada examen/materia para no chocar con otros examenes abiertos en el mismo navegador
+
+// Redaccion alternativa: si la pregunta trae "alts", se elige al azar una
+// redaccion entre el enunciado original y las alternativas (sinonimos o frases
+// que piden la misma respuesta). En text/opts/correct no cambia nada, solo el
+// enunciado. Para dragdrop, cada alternativa es {before, after}.
+function pickVariant(type, q) {
+  if (!Array.isArray(q.alts) || q.alts.length === 0) return q;
+  const base = type === 'dragdrop' ? { before: q.before, after: q.after } : { text: q.text };
+  const pool = [base, ...q.alts.map(a => (typeof a === 'string' ? { text: a } : a))];
+  return { ...q, ...pool[Math.floor(Math.random() * pool.length)] };
+}
+
+function buildActiveSection(sec) {
+  const s = JSON.parse(JSON.stringify(sec));
+  // Banco de preguntas ampliado: se toma una muestra aleatoria de N preguntas
+  // del pool completo de la seccion en cada intento, para que el examen
+  // varie entre estudiantes e intentos.
+  const n = Math.min(QUESTIONS_PER_SECTION, s.questions.length);
+  s.questions = shuffle(s.questions).slice(0, n).map(q => pickVariant(s.type, q));
+  if (s.type === 'multiple') {
+    s.questions = s.questions.map(q => {
+      const indexed = q.opts.map((opt, i) => ({ opt, i }));
+      const sh = shuffle(indexed);
+      const newCorrect = sh.findIndex(x => x.i === q.correct);
+      return { ...q, opts: sh.map(x => x.opt), correct: newCorrect };
+    });
+  } else if (s.type === 'multiselect') {
+    s.questions = s.questions.map(q => {
+      const indexed = q.opts.map((opt, i) => ({ opt, i }));
+      const sh = shuffle(indexed);
+      const correctSet = new Set(q.correct);
+      const newCorrect = sh.reduce((acc, x, ni) => { if (correctSet.has(x.i)) acc.push(ni); return acc; }, []);
+      return { ...q, opts: sh.map(x => x.opt), correct: newCorrect };
+    });
+  } else if (s.type === 'dragdrop') {
+    // El banco de palabras se construye dinamicamente a partir de las
+    // preguntas efectivamente seleccionadas en este intento (no de un
+    // listado estatico), para que coincida siempre 1 a 1 con los espacios
+    // en blanco mostrados.
+    s.bankWords = shuffle(s.questions.map(q => q.correct));
+  }
+  return s;
+}
+
+let ACTIVE_SECTIONS = [];
+
+const CLRS = {
+  blue:  {tab:'#007AFF', badge:'bg-blue-100 text-blue-700'},
+  purple:{tab:'#AF52DE', badge:'bg-purple-100 text-purple-700'},
+  green: {tab:'#34C759', badge:'bg-green-100 text-green-700'},
+  orange:{tab:'#FF9500', badge:'bg-orange-100 text-orange-700'},
+  teal:  {tab:'#5AC8FA', badge:'bg-cyan-100 text-cyan-700'},
+  red:   {tab:'#FF3B30', badge:'bg-red-100 text-red-700'},
+};
+
+let state = {
+  screen: 'intake',
+  student: null,
+  current: 0,
+  answers: null,
+  submitted: false,
+  seconds: EXAM_SECONDS,
+  timerInterval: null,
+  selectedChip: null,
+  consent: false,
+  lockRecord: null,
+  veriCode: null,
+  annulled: false,
+  annulReason: null,
+};
+
+function formatDateTimeLocal(date) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function formatDateTimeForDisplay(value) {
+  const date = value ? new Date(value) : new Date();
+  return date.toLocaleString('es-BO', {dateStyle:'full', timeStyle:'short'});
+}
+
+// ---------- Mecanismo de bloqueo por correo: un intento por correo, registrado en este navegador ----------
+function normalizeEmail(e){ return (e||'').trim().toLowerCase(); }
+
+function getLocks(){
+  try {
+    const raw = localStorage.getItem(LOCK_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(err){ return {}; }
+}
+
+function saveLocks(locks){
+  try { localStorage.setItem(LOCK_STORAGE_KEY, JSON.stringify(locks)); } catch(err){}
+}
+
+function getLockForEmail(email){
+  const key = normalizeEmail(email);
+  if(!key) return null;
+  const locks = getLocks();
+  return locks[key] || null;
+}
+
+// Hash no criptografico (variante cyrb53) para generar un codigo de verificacion corto y estable,
+// sin depender de crypto.subtle (bloqueado en algunos navegadores bajo file://).
+function simpleHash(str){
+  let h1 = 0xdeadbeef ^ str.length, h2 = 0x41c6ce57 ^ str.length;
+  for (let i=0;i<str.length;i++){
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+  return 4294967296 * (2097151 & h2) + (h1>>>0);
+}
+
+function generateSubmissionCode(email, tsIso){
+  const raw = normalizeEmail(email) + '|' + tsIso;
+  const num = simpleHash(raw);
+  return 'ASI0400-' + num.toString(36).toUpperCase().slice(0,8);
+}
+
+function renderLockBanner(record){
+  const banner = document.getElementById('lock-banner');
+  if(!banner) return;
+  if(!record){ banner.style.display='none'; banner.innerHTML=''; return; }
+  banner.style.display='';
+  banner.className = 'mt-2 rounded-xl px-3 py-2.5 text-xs leading-relaxed bg-orange-50 border border-orange-300 text-orange-800';
+  banner.innerHTML = '<strong>&#128274; Este correo ya registro una respuesta</strong><br>Entregado el ' + record.submittedAtDisplay + ' &middot; Codigo: <strong>' + record.code + '</strong><br>Esa respuesta es tu nota final. Toca el boton de abajo para volver a verla.';
+}
+
+function handleStartClick(){
+  if(state.lockRecord){
+    loadLockedResult(state.lockRecord);
+  } else {
+    startExam();
+  }
+}
+
+function loadLockedResult(record){
+  ACTIVE_SECTIONS = record.activeSections;
+  state.student = record.student;
+  state.answers = record.answers;
+  state.submitted = true;
+  state.veriCode = record.code;
+  state.annulled = !!record.annulled;
+  state.annulReason = record.annulReason || null;
+  document.getElementById('intake-screen').style.display = 'none';
+  computeAndRenderResults();
+}
+
+function checkIntake() {
+  const n = document.getElementById('inp-nombre').value.trim();
+  const c = document.getElementById('inp-codigo').value.trim();
+  const eEl = document.getElementById('inp-email');
+  const e = eEl ? eEl.value.trim() : '';
+  // Validación permisiva: acepta cualquier texto con @ y al menos un punto después
+  const emailOk = e.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const f = document.getElementById('inp-fecha').value;
+  const consentInput = document.getElementById('inp-consent');
+  state.consent = consentInput ? consentInput.checked : state.consent;
+
+  const lockRec = emailOk ? getLockForEmail(e) : null;
+  state.lockRecord = lockRec;
+  renderLockBanner(lockRec);
+
+  const btn = document.getElementById('btn-start');
+  if (!btn) return;
+
+  if (lockRec) {
+    // El correo ya entrego una respuesta: se habilita el boton unicamente para VER esa nota final.
+    btn.disabled = false;
+    btn.style.background = '#FF9500';
+    btn.style.color = '#fff';
+    btn.className = 'w-full py-4 rounded-2xl font-bold text-base transition-all active:scale-95 cursor-pointer shadow-md';
+    btn.textContent = 'Ver mi resultado ya registrado ▶';
+    return;
+  }
+
+  const ok = n && c && emailOk && f && state.consent;
+  if (ok) {
+    btn.disabled = false;
+    btn.style.background = '#007AFF';
+    btn.style.color = '#fff';
+    btn.className = 'w-full py-4 rounded-2xl font-bold text-base transition-all active:scale-95 cursor-pointer shadow-md';
+    btn.textContent = 'Comenzar Examen ▶';
+  } else {
+    btn.disabled = true;
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.className = 'w-full py-4 rounded-2xl font-bold text-base bg-gray-200 text-gray-400 transition-all cursor-not-allowed';
+    btn.textContent = 'Completar todos los campos para continuar';
+  }
+}
+
+function toggleConsent(checked) {
+  state.consent = typeof checked === 'boolean' ? checked : !state.consent;
+  const input = document.getElementById('inp-consent');
+  if (input) input.checked = state.consent;
+  const box = document.getElementById('consent-box');
+  if (box) {
+    if (state.consent) {
+      box.style.background = '#007AFF';
+      box.style.borderColor = '#007AFF';
+      box.innerHTML = '<svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4L4.5 7.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    } else {
+      box.style.background = '';
+      box.style.borderColor = '';
+      box.innerHTML = '';
+    }
+  }
+  checkIntake();
+}
+
+function initializeIntakeScreen() {
+  const intakeLogo = document.getElementById('intake-logo');
+  if (intakeLogo) intakeLogo.src = LOGO_DATA_URI;
+  const hdLogo = document.getElementById('hd-logo');
+  if (hdLogo) hdLogo.src = LOGO_DATA_URI;
+  document.getElementById('inp-fecha').value = formatDateTimeLocal(new Date());
+  checkIntake();
+  // Forzar re-evaluación después de que el browser procese todos los valores iniciales
+  setTimeout(checkIntake, 100);
+  var _poll = setInterval(function() {
+    var el = document.getElementById('intake-screen');
+    if (!el || el.style.display === 'none') { clearInterval(_poll); return; }
+    checkIntake();
+  }, 250);
+}
+
+// ---------- Monitor de integridad: anula el examen si el estudiante cambia de pestaña/ventana ----------
+let integrityMonitorActive = false;
+
+function startIntegrityMonitor(){
+  integrityMonitorActive = true;
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('blur', handleWindowBlur);
+}
+
+function stopIntegrityMonitor(){
+  integrityMonitorActive = false;
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('blur', handleWindowBlur);
+}
+
+function handleVisibilityChange(){
+  if(!integrityMonitorActive || state.submitted) return;
+  if(document.hidden){
+    annulExam('Cambiaste de pestaña o minimizaste el navegador durante el examen.');
+  }
+}
+
+function handleWindowBlur(){
+  if(!integrityMonitorActive || state.submitted) return;
+  // Pequeño margen para no disparar en falso por un enfoque interno de la propia pagina;
+  // se confirma que la ventana realmente perdio el foco antes de anular.
+  setTimeout(function(){
+    if(!integrityMonitorActive || state.submitted) return;
+    if(document.hidden || !document.hasFocus()){
+      annulExam('Saliste de la ventana del examen (cambio de aplicacion o pestaña) durante el examen.');
+    }
+  }, 50);
+}
+
+function annulExam(reason){
+  if(state.submitted) return;
+  stopIntegrityMonitor();
+  clearInterval(state.timerInterval);
+  state.submitted = true;
+  state.annulled = true;
+  state.annulReason = reason;
+  saveLockRecord();
+  computeAndRenderResults();
+}
+
+function startExam() {
+  const n = document.getElementById('inp-nombre').value.trim();
+  const c = document.getElementById('inp-codigo').value.trim();
+  const e = document.getElementById('inp-email').value.trim();
+  const f = document.getElementById('inp-fecha').value;
+  const emailOk = e.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  if (!n||!c||!emailOk||!f||!state.consent) return;
+
+  // Verificacion de respaldo: si el correo ya registro una respuesta, no se inicia un examen nuevo.
+  const existingLock = getLockForEmail(e);
+  if (existingLock) { state.lockRecord = existingLock; loadLockedResult(existingLock); return; }
+
+  state.student = { nombre:n, codigo:c, email:e, startTime: formatDateTimeForDisplay(f) };
+  ACTIVE_SECTIONS = shuffle(SECTIONS).map(buildActiveSection);
+  state.answers = ACTIVE_SECTIONS.map(sec => {
+    if (sec.type === 'multiselect') {
+      return Array(sec.questions.length).fill(null).map(() => []);
+    } else {
+      return Array(sec.questions.length).fill(null);
+    }
+  });
+
+  document.getElementById('hd-student').textContent = `${n} · ${c}`;
+  document.getElementById('intake-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = '';
+  startTimer();
+  startIntegrityMonitor();
+  render();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeIntakeScreen);
+} else {
+  initializeIntakeScreen();
+}
+
+function startTimer() {
+  state.timerInterval = setInterval(()=>{
+    state.seconds--;
+    const m = String(Math.floor(state.seconds/60)).padStart(2,'0');
+    const s = String(state.seconds%60).padStart(2,'0');
+    const el = document.getElementById('timer');
+    if (el) { el.textContent=`${m}:${s}`; if(state.seconds<=300) el.classList.add('text-ios-red','font-black'); }
+    if (state.seconds<=0){ clearInterval(state.timerInterval); confirmSubmit(true); }
+  },1000);
+}
+
+function countAnswered(){
+  let n=0;
+  ACTIVE_SECTIONS.forEach((sec,si)=>{
+    sec.questions.forEach((_,qi)=>{
+      const a=state.answers[si][qi];
+      if(sec.type==='multiselect') { if(a&&a.length>0) n++; }
+      else if(a!==null) n++;
+    });
+  });
+  return n;
+}
+
+function updateProgress(){
+  const ans=countAnswered();
+  document.getElementById('progress-bar').style.width=(ans/TOTAL_QUESTIONS*100)+'%';
+  document.getElementById('prog-pct').textContent=`${ans} / ${TOTAL_QUESTIONS}`;
+  document.getElementById('prog-label').textContent=`Bloque ${state.current+1} de ${ACTIVE_SECTIONS.length}`;
+}
+
+function updateTabs(){
+  ACTIVE_SECTIONS.forEach((sec,i)=>{
+    const tab=document.getElementById(`tab-${i}`);
+    if(!tab) return;
+    tab.textContent = `${sec.icon} ${sec.title.split(' ')[0]}`;
+    tab.className='stab';
+    if(i===state.current){
+      tab.classList.add('active');
+      tab.style.background=CLRS[sec.color].tab;
+      tab.style.borderColor=CLRS[sec.color].tab;
+    } else {
+      tab.style.background=''; tab.style.borderColor='';
+      const a=state.answers[i];
+      const done = sec.type==='multiselect' ? a.some(x=>x&&x.length>0) : a.some(x=>x!==null);
+      if(done) tab.classList.add('done');
+    }
+  });
+}
+
+function render(){ updateTabs(); updateProgress(); updateNavButtons(); renderSection(state.current); }
+
+function updateNavButtons(){
+  const prev=document.getElementById('btn-prev');
+  const next=document.getElementById('btn-next');
+  const sub=document.getElementById('btn-submit');
+  if(prev) prev.disabled=state.current===0;
+  if(next&&sub){
+    if(state.current===ACTIVE_SECTIONS.length-1){ next.style.display='none'; sub.style.display=''; }
+    else { next.style.display=''; sub.style.display='none'; }
+  }
+}
+
+function renderSection(idx, scrollMode){
+  const sec=ACTIVE_SECTIONS[idx];
+  if(!sec) return;
+  const col=CLRS[sec.color];
+  const main=document.getElementById('main-content');
+  const prevScroll = scrollMode === 'keep' ? window.scrollY : null;
+  let h=`<div class="section-in"><div class="card p-5 mb-5"><div class="flex items-start gap-3"><span class="text-3xl">${sec.icon}</span><div><div class="flex items-center gap-2 mb-1 flex-wrap"><h2 class="text-xl font-bold text-gray-900">${sec.title}</h2><span class="text-xs px-2 py-0.5 rounded-full font-semibold ${col.badge}">${sec.type==='multiple'?'Opcion multiple (1 correcta)':sec.type==='multiselect'?'Seleccion multiple (2+ correctas)':sec.type==='truefalse'?'Verdadero / Falso':'Completar parrafos'}</span></div><p class="text-xs text-ios-second">${sec.desc}</p></div></div></div>`;
+  if(sec.type==='multiple') h+=renderMultiple(sec,idx,col);
+  else if(sec.type==='multiselect') h+=renderMultiSelect(sec,idx,col);
+  else if(sec.type==='truefalse') h+=renderTrueFalse(sec,idx,col);
+  else h+=renderDragDrop(sec,idx,col);
+  h+=`</div>`;
+  main.innerHTML=h;
+  if (prevScroll !== null) {
+    requestAnimationFrame(() => window.scrollTo({top: prevScroll}));
+  } else if (scrollMode !== false) {
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  if(sec.type==='dragdrop') initDragDrop(idx);
+}
+
+function renderMultiple(sec,si,col){
+  let h='<div class="space-y-4">';
+  sec.questions.forEach((q,qi)=>{
+    const ans=state.answers[si][qi]; const sub=state.submitted;
+    h+=`<div class="card p-5"><div class="flex gap-3 mb-4"><span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${col.badge}">${qi+1}</span><p class="text-gray-800 font-medium leading-snug text-sm">${q.text}</p></div><div class="space-y-2">`;
+    q.opts.forEach((opt,oi)=>{
+      let cls='opt p-3 flex items-start gap-3';
+      let circleStyle='width:20px;height:20px;border-radius:99px;border:2px solid #D1D5DB;flex-shrink:0;margin-top:2px';
+      let circleInner='';
+      if(!sub&&ans===oi){ cls+=' sel'; circleStyle='width:20px;height:20px;border-radius:99px;border:2px solid #007AFF;background:#007AFF;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center'; circleInner='<span style="width:8px;height:8px;background:#fff;border-radius:99px;display:block"></span>'; }
+      if(sub&&oi===q.correct){ cls+=' ok'; circleStyle='width:20px;height:20px;border-radius:99px;background:#34C759;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center'; circleInner='<span style="color:#fff;font-size:11px;font-weight:bold">&#10003;</span>'; }
+      if(sub&&ans===oi&&oi!==q.correct){ cls+=' fail'; circleStyle='width:20px;height:20px;border-radius:99px;background:#FF3B30;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center'; circleInner='<span style="color:#fff;font-size:11px;font-weight:bold">&#10007;</span>'; }
+      const icon=`<span class="opt-circle" data-opt-circle="${si}-${qi}-${oi}" style="${circleStyle}">${circleInner}</span>`;
+      h+=`<div class="${cls}" data-opt="${si}-${qi}-${oi}" onclick="${sub?'':'selectSingle('+si+','+qi+','+oi+')'}">${icon}<span class="text-sm text-gray-800">${opt}</span></div>`;
+    });
+    if(sub) h+=`<div class="mt-3 p-3 rounded-xl text-xs leading-relaxed ${ans===q.correct?'bg-green-50 text-green-800':'bg-red-50 text-red-800'}"><span class="font-bold">${ans===q.correct?'&#10003; Correcto':'&#10007; Incorrecto &mdash; la respuesta era: &ldquo;'+q.opts[q.correct]+'&rdquo;'}</span><span class="block mt-1 opacity-80">&#128161; ${q.just}</span></div>`;
+    h+=`</div></div>`;
+  });
+  return h+'</div>';
+}
+
+function selectSingle(si,qi,oi){
+  if(state.submitted) return;
+  state.answers[si][qi]=oi;
+  const q=ACTIVE_SECTIONS[si].questions[qi];
+  q.opts.forEach((_,i)=>{
+    const el=document.querySelector('[data-opt="'+si+'-'+qi+'-'+i+'"]');
+    if(!el) return;
+    const isSel=i===oi;
+    el.className='opt p-3 flex items-start gap-3'+(isSel?' sel':'');
+    const circle=el.querySelector('[data-opt-circle]');
+    if(circle){
+      if(isSel){
+        circle.style.cssText='width:20px;height:20px;border-radius:99px;border:2px solid #007AFF;background:#007AFF;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center';
+        circle.innerHTML='<span style="width:8px;height:8px;background:#fff;border-radius:99px;display:block"></span>';
+      } else {
+        circle.style.cssText='width:20px;height:20px;border-radius:99px;border:2px solid #D1D5DB;background:transparent;flex-shrink:0;margin-top:2px';
+        circle.innerHTML='';
+      }
+    }
+  });
+  updateProgress();
+}
+
+function renderMultiSelect(sec,si,col){
+  let h=`<div class="space-y-4"><div class="flex items-center gap-2 px-1"><span class="w-5 h-5 rounded bg-purple-100 flex items-center justify-center text-purple-700 text-xs flex-shrink-0">&#9745;</span><p class="text-xs text-ios-second">Selecciona <strong>todas</strong> las opciones correctas. Solo obtienes el punto si marcas exactamente las correctas.</p></div>`;
+  sec.questions.forEach((q,qi)=>{
+    const sel=state.answers[si][qi]||[]; const sub=state.submitted;
+    const correct=new Set(q.correct);
+    const allOk = sel.length===q.correct.length && q.correct.every(c=>sel.includes(c));
+    h+=`<div class="card p-5"><div class="flex gap-3 mb-4"><span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${col.badge}">${qi+1}</span><p class="text-gray-800 font-medium leading-snug text-sm">${q.text}</p></div><div class="space-y-2">`;
+    q.opts.forEach((opt,oi)=>{
+      const isSelected=sel.includes(oi);
+      const isCorrect=correct.has(oi);
+      let cls='opt p-3 flex items-start gap-3';
+      let boxCls='cb-box mt-0.5';
+      let boxInner='';
+      if(!sub){
+        if(isSelected){ cls+=' sel'; boxCls+=' checked'; boxInner='<svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+      } else {
+        if(isSelected&&isCorrect)  { cls+=' ok';     boxCls+=' ok-check';     boxInner='<svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+        if(isSelected&&!isCorrect) { cls+=' fail';   boxCls+=' fail-check';   boxInner='<span style="color:white;font-size:10px;font-weight:bold">&#10007;</span>'; }
+        if(!isSelected&&isCorrect) { cls+=' missed'; boxCls+=' missed-check'; boxInner='<span style="color:white;font-size:10px;font-weight:bold">!</span>'; }
+      }
+      h+=`<div class="${cls}" data-mopt="${si}-${qi}-${oi}" onclick="${sub?'':'toggleMulti('+si+','+qi+','+oi+')'}"><span class="opt-cb ${boxCls}" data-cb="${si}-${qi}-${oi}">${boxInner}</span><span class="text-sm text-gray-800">${opt}</span></div>`;
+    });
+    if(sub){
+      h+=`<div class="mt-3 p-3 rounded-xl text-xs leading-relaxed ${allOk?'bg-green-50 text-green-800':'bg-red-50 text-red-800'}"><span class="font-bold">${allOk?'&#10003; Todas las correctas seleccionadas':'&#10007; Seleccion incorrecta o incompleta'}</span><span class="block mt-1 opacity-80">&#128161; ${q.just}</span></div>`;
+    } else {
+      h+=`<p class="text-xs text-ios-second mt-2 pl-1" data-count="${si}-${qi}">Seleccionadas: ${sel.length} de ${q.correct.length} necesarias</p>`;
+    }
+    h+=`</div></div>`;
+  });
+  return h+'</div>';
+}
+
+function toggleMulti(si,qi,oi){
+  if(state.submitted) return;
+  const arr=state.answers[si][qi]||[];
+  const idx=arr.indexOf(oi);
+  if(idx>=0) arr.splice(idx,1); else arr.push(oi);
+  state.answers[si][qi]=arr;
+  const isSel=arr.includes(oi);
+  const el=document.querySelector('[data-mopt="'+si+'-'+qi+'-'+oi+'"]');
+  if(el){
+    el.className='opt p-3 flex items-start gap-3'+(isSel?' sel':'');
+    const cb=el.querySelector('[data-cb]');
+    if(cb){
+      if(isSel){
+        cb.className='opt-cb cb-box checked mt-0.5';
+        cb.innerHTML='<svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      } else {
+        cb.className='opt-cb cb-box mt-0.5';
+        cb.innerHTML='';
+      }
+    }
+  }
+  const counter=document.querySelector('[data-count="'+si+'-'+qi+'"]');
+  if(counter){
+    const q=ACTIVE_SECTIONS[si].questions[qi];
+    counter.textContent='Seleccionadas: '+arr.length+' de '+q.correct.length+' necesarias';
+  }
+  updateProgress();
+}
+
+function renderTrueFalse(sec,si,col){
+  let h='<div class="space-y-4">';
+  sec.questions.forEach((q,qi)=>{
+    const ans=state.answers[si][qi]; const sub=state.submitted;
+    let tCls='tf flex-1', fCls='tf flex-1';
+    if(!sub){ if(ans===true) tCls+=' sel-true'; if(ans===false) fCls+=' sel-false'; }
+    else {
+      if(q.correct===true)  tCls+=' ok'; else tCls+=(ans===true?' fail':'');
+      if(q.correct===false) fCls+=' ok'; else fCls+=(ans===false?' fail':'');
+    }
+    h+=`<div class="card p-5"><div class="flex gap-3 mb-4"><span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${col.badge}">${qi+1}</span><p class="text-gray-800 font-medium leading-snug text-sm">${q.text}</p></div><div class="flex gap-3"><div class="${tCls}" data-tf="${si}-${qi}-true" onclick="${sub?'':'selectTF('+si+','+qi+',true)'}">&#10003; Verdadero</div><div class="${fCls}" data-tf="${si}-${qi}-false" onclick="${sub?'':'selectTF('+si+','+qi+',false)'}">&#10007; Falso</div></div>`;
+    if(sub){ const ok=ans===q.correct;
+      h+=`<div class="mt-3 p-3 rounded-xl text-xs leading-relaxed ${ok?'bg-green-50 text-green-800':'bg-red-50 text-red-800'}"><span class="font-bold">${ok?'&#10003; Correcto':'&#10007; La respuesta es '+(q.correct?'Verdadero':'Falso')}</span><span class="block mt-1 opacity-80">&#128161; ${q.just}</span></div>`;
+    }
+    h+=`</div>`;
+  });
+  return h+'</div>';
+}
+
+function selectTF(si,qi,val){
+  if(state.submitted) return;
+  state.answers[si][qi]=val;
+  const trueEl=document.querySelector('[data-tf="'+si+'-'+qi+'-true"]');
+  const falseEl=document.querySelector('[data-tf="'+si+'-'+qi+'-false"]');
+  if(trueEl) trueEl.className='tf flex-1'+(val===true?' sel-true':'');
+  if(falseEl) falseEl.className='tf flex-1'+(val===false?' sel-false':'');
+  updateProgress();
+}
+
+function renderDragDrop(sec,si,col){
+  const used=state.answers[si].filter(a=>a!==null);
+  const hasActive = !!state.selectedChip;
+  let bank=`<div id="word-bank-sticky" class="card p-4 mb-4" style="position:sticky;top:140px;z-index:30;box-shadow:0 4px 20px rgba(0,0,0,.13);transition:box-shadow .2s ease"><div class="flex items-center justify-between mb-2 gap-2"><p class="text-xs font-semibold text-ios-second uppercase tracking-wide">Banco de palabras</p>${hasActive?`<span class="text-xs text-ios-blue font-semibold animate-pulse">Desplazate y toca el espacio en blanco</span>`:`<span class="text-xs text-ios-second">Toca una palabra para seleccionarla</span>`}</div><div class="flex flex-wrap gap-2">`;
+  sec.bankWords.forEach(w=>{
+    const isUsed   = used.includes(w);
+    const isActive = state.selectedChip===w;
+    let cls='chip';
+    if(isUsed)   cls+=' used';
+    if(isActive) cls+=' active';
+    bank+=`<span class="${cls}" onclick="chipClick(this.dataset.word)" data-word="${w}">${w}</span>`;
+  });
+  bank+=`</div></div>`;
+  let qs='<div class="space-y-4">';
+  sec.questions.forEach((q,qi)=>{
+    const placed=state.answers[si][qi]; const sub=state.submitted;
+    let bCls='blank', bTxt=placed||'toca aqui';
+    if(placed) bCls+=' ready';
+    if(sub&&placed){ bCls=placed===q.correct?'blank ok':'blank fail'; }
+    qs+=`<div class="card p-5"><div class="flex gap-3 mb-3"><span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${col.badge}">${qi+1}</span><p class="text-xs font-semibold text-ios-second uppercase tracking-wide mt-1.5">Completa el enunciado</p></div><p class="text-gray-800 text-sm leading-relaxed">${q.before}<span class="${bCls}" id="blank-${si}-${qi}" onclick="blankClick(${si},${qi})">${bTxt}</span>${q.after}</p>`;
+    if(sub&&placed){ const ok=placed===q.correct;
+      qs+=`<div class="mt-3 p-3 rounded-xl text-xs leading-relaxed ${ok?'bg-green-50 text-green-800':'bg-red-50 text-red-800'}"><span class="font-bold">${ok?'&#10003; Correcto':'&#10007; La palabra correcta es: '+q.correct}</span><span class="block mt-1 opacity-80">&#128161; ${q.just}</span></div>`;
+    }
+    qs+=`</div>`;
+  });
+  return bank+qs+'</div>';
+}
+
+function chipClick(w){
+  if(state.submitted) return;
+  const used=state.answers[state.current].filter(a=>a!==null);
+  if(used.includes(w)&&state.selectedChip!==w) return;
+  state.selectedChip=state.selectedChip===w?null:w;
+  renderSection(state.current,'keep');
+}
+
+function blankClick(si,qi){
+  if(state.submitted||!state.selectedChip) return;
+  state.answers[si][qi]=state.selectedChip;
+  const blank=document.getElementById(`blank-${si}-${qi}`);
+  if(blank){
+    blank.textContent=state.selectedChip;
+    blank.classList.add('ready');
+  }
+  state.selectedChip=null;
+  updateProgress();
+  renderSection(state.current,'keep');
+}
+
+function initDragDrop(idx){}
+
+function goSection(idx){ if(idx<0||idx>=ACTIVE_SECTIONS.length) return; state.current=idx; state.selectedChip=null; render(); }
+function prevSection(){ if(state.current>0){ state.current--; state.selectedChip=null; render(); } }
+function nextSection(){ if(state.current<ACTIVE_SECTIONS.length-1){ state.current++; state.selectedChip=null; render(); } }
+
+function confirmSubmit(auto=false){
+  if(!auto){
+    showConfirmModal('¿Deseas entregar la actividad?', 'No podrás volver atrás. Las preguntas sin responder quedarán en blanco.', function(){
+      doSubmit();
+    });
+    return;
+  }
+  doSubmit();
+}
+
+function showConfirmModal(title, message, onConfirm){
+  // Eliminar modal previo si existe
+  var prev = document.getElementById('confirm-modal');
+  if(prev) prev.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'confirm-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)';
+  modal.innerHTML = '<div style="background:#fff;border-radius:20px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center">' +
+    '<div style="font-size:2rem;margin-bottom:12px">📋</div>' +
+    '<p style="font-weight:700;font-size:1rem;color:#1a1a1a;margin:0 0 8px">' + title + '</p>' +
+    '<p style="font-size:.85rem;color:#6C6C70;line-height:1.5;margin:0 0 24px">' + message + '</p>' +
+    '<div style="display:flex;gap:10px">' +
+      '<button id="modal-cancel" style="flex:1;padding:13px;border-radius:13px;border:2px solid #E5E5EA;background:#fff;font-weight:600;font-size:.9rem;color:#6C6C70;cursor:pointer">Cancelar</button>' +
+      '<button id="modal-confirm" style="flex:1;padding:13px;border-radius:13px;border:none;background:#34C759;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 4px 14px rgba(52,199,89,.35)">Entregar</button>' +
+    '</div></div>';
+
+  document.body.appendChild(modal);
+
+  document.getElementById('modal-cancel').onclick = function(){
+    modal.remove();
+  };
+  document.getElementById('modal-confirm').onclick = function(){
+    modal.remove();
+    onConfirm();
+  };
+  // Cerrar al tocar el fondo
+  modal.addEventListener('click', function(e){
+    if(e.target === modal) modal.remove();
+  });
+}
+
+function doSubmit(){
+  stopIntegrityMonitor();
+  clearInterval(state.timerInterval);
+  state.submitted=true;
+  saveLockRecord();
+  computeAndRenderResults();
+}
+
+function saveLockRecord(){
+  const email = state.student && state.student.email;
+  const key = normalizeEmail(email);
+  if(!key) return;
+  const tsIso = new Date().toISOString();
+  const code = generateSubmissionCode(email, tsIso);
+  state.veriCode = code;
+  const record = {
+    student: state.student,
+    activeSections: ACTIVE_SECTIONS,
+    answers: state.answers,
+    code: code,
+    annulled: !!state.annulled,
+    annulReason: state.annulReason || null,
+    submittedAtIso: tsIso,
+    submittedAtDisplay: new Date().toLocaleString('es-BO', {dateStyle:'long', timeStyle:'short'})
+  };
+  const locks = getLocks();
+  locks[key] = record;
+  saveLocks(locks);
+}
+
+function computeAndRenderResults(){
+  const rawCorrect = ACTIVE_SECTIONS.reduce((sum, sec, si) => {
+    return sum + sec.questions.filter((q, qi) => {
+      const ans = state.answers[si][qi];
+      if (sec.type === 'multiselect') {
+        const ansSet = new Set(ans);
+        const corrSet = new Set(q.correct);
+        return ansSet.size === corrSet.size && [...corrSet].every(c => ansSet.has(c));
+      } else if (sec.type === 'truefalse' || sec.type === 'multiple' || sec.type === 'dragdrop') {
+        return ans === q.correct;
+      }
+      return false;
+    }).length;
+  }, 0);
+
+  const total = ACTIVE_SECTIONS.reduce((sum, s) => sum + s.questions.length, 0);
+  const correct = state.annulled ? 0 : rawCorrect;
+  const pct = state.annulled ? 0 : Math.round((correct / total) * 100);
+
+  const annulBanner = document.getElementById('annul-banner');
+  if(annulBanner){
+    if(state.annulled){
+      annulBanner.style.display = '';
+      annulBanner.innerHTML = '<p class="font-bold text-red-800 text-sm mb-1 flex items-center gap-1.5"><span class="text-lg">&#9888;&#65039;</span> Examen anulado</p><p class="text-xs text-red-700 leading-relaxed">' + (state.annulReason || 'Se detecto un cambio de pantalla durante el examen.') + ' Segun la politica del examen, esto anula la evaluacion y tu nota queda registrada como 0. Esta decision es definitiva y no se puede repetir el examen.</p>';
+    } else {
+      annulBanner.style.display = 'none';
+      annulBanner.innerHTML = '';
+    }
+  }
+
+  const ring = document.getElementById('score-ring');
+  if(ring){ ring.style.borderColor = state.annulled ? '#FF3B30' : (pct>=80?'#34C759':pct>=60?'#FF9500':'#FF3B30'); }
+  document.getElementById('score-num').textContent = correct;
+  document.getElementById('score-label').textContent = state.annulled ? 'ANULADO — 0%' : (pct + '% — ' + (pct>=80?'Excelente':pct>=60?'Bueno':pct>=40?'Regular':'Necesita refuerzo'));
+  document.getElementById('score-sub').textContent = state.annulled ? ('Examen anulado por cambio de pantalla') : (correct + ' de ' + total + ' respuestas correctas');
+  document.getElementById('res-nombre').textContent = state.student.nombre;
+  document.getElementById('res-codigo').textContent = state.student.codigo;
+  document.getElementById('res-grade').textContent = state.annulled ? 'Anulado (0%)' : (pct + '% (' + (pct>=80?'Avanzado':pct>=60?'Intermedio':pct>=40?'Basico':'Inicial') + ')');
+  const veriEl = document.getElementById('res-veriCode');
+  if(veriEl) veriEl.textContent = state.veriCode || '--';
+
+  let breakdown = '';
+  ACTIVE_SECTIONS.forEach((sec, si) => {
+    const sectionCorrect = sec.questions.filter((q, qi) => {
+      const ans = state.answers[si][qi];
+      if (sec.type === 'multiselect') {
+        const ansSet = new Set(ans);
+        const corrSet = new Set(q.correct);
+        return ansSet.size === corrSet.size && [...corrSet].every(c => ansSet.has(c));
+      } else if (sec.type === 'truefalse' || sec.type === 'multiple' || sec.type === 'dragdrop') {
+        return ans === q.correct;
+      }
+    }).length;
+    const pctSec = Math.round((sectionCorrect / sec.questions.length) * 100);
+    breakdown += '<div class="p-3 rounded-lg bg-gray-50 flex justify-between items-center"><span><strong>' + sec.icon + ' ' + sec.title + '</strong><br><span class="text-xs text-ios-second">' + sectionCorrect + '/' + sec.questions.length + ' correctas</span></span><span class="text-lg font-bold ' + (pctSec>=75?'text-green-600':pctSec>=50?'text-orange-600':'text-red-600') + '">' + pctSec + '%</span></div>';
+  });
+  if(state.annulled){
+    breakdown = '<p class="text-xs text-ios-second">El desglose por bloque no aplica: la nota final es 0 por anulacion. El detalle completo de lo respondido antes de la anulacion queda disponible en el PDF, para fines de revision.</p>';
+  }
+  document.getElementById('breakdown').innerHTML = breakdown;
+
+  const insights = generateInsights(ACTIVE_SECTIONS, state.answers);
+  let insightsHtml = '';
+  insights.forEach((insight) => {
+    insightsHtml += '<div class="insight-card ' + insight.level + '"><div class="ic-title">' + insight.topic + '</div><div class="ic-text">' + insight.recommendation + '</div></div>';
+  });
+  document.getElementById('insights-container').innerHTML = state.annulled ? '' : (insightsHtml || '<p class="text-ios-second text-xs">Analisis en progreso...</p>');
+
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('results-overlay').style.display = '';
+  window.scrollTo({top:0});
+}
+
+function generateInsights(sections, answers) {
+  const insights = [];
+  const scoreBySection = sections.map((sec, si) => {
+    const correct = sec.questions.filter((q, qi) => {
+      const ans = answers[si][qi];
+      if (sec.type === 'multiselect') {
+        const ansSet = new Set(ans);
+        const corrSet = new Set(q.correct);
+        return ansSet.size === corrSet.size && [...corrSet].every(c => ansSet.has(c));
+      } else {
+        return ans === q.correct;
+      }
+    }).length;
+    return { section: sec.title, icon: sec.icon, score: (correct / sec.questions.length) * 100 };
+  });
+
+  scoreBySection.sort((a, b) => a.score - b.score);
+  scoreBySection.slice(0, 2).forEach(item => {
+    insights.push({ level: 'high', topic: item.icon + ' ' + item.section, recommendation: 'Area de refuerzo prioritario. Revisar el material del bloque correspondiente y practicar con ejercicios adicionales antes de continuar con el curso.' });
+  });
+  scoreBySection.slice(2, 4).forEach(item => {
+    insights.push({ level: 'medium', topic: item.icon + ' ' + item.section, recommendation: 'Area de mejora. Se recomienda revisar los conceptos clave y reforzar con la bibliografia del curso.' });
+  });
+  scoreBySection.slice(4).forEach(item => {
+    insights.push({ level: 'low', topic: item.icon + ' ' + item.section, recommendation: 'Buen dominio de este tema. Mantener el nivel y profundizar con los casos practicos del bloque.' });
+  });
+  return insights;
+}
+
+function buildDetailedFeedbackHTML() {
+  let html = '<div style="margin-top:40px;border-top:3px solid #007AFF;padding-top:30px">';
+  html += '<h2 style="font-size:20px;font-weight:700;color:#007AFF;margin-bottom:6px">Retroalimentacion Detallada por Pregunta</h2>';
+  html += '<p style="font-size:12px;color:#666;margin-bottom:24px">Para cada pregunta: tu respuesta, la respuesta correcta y la justificacion de todas las opciones.</p>';
+
+  ACTIVE_SECTIONS.forEach((sec, si) => {
+    html += '<div style="margin-bottom:28px">';
+    html += '<div style="background:#007AFF;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:14px">' + sec.icon + ' ' + sec.title + '</div>';
+
+    sec.questions.forEach((q, qi) => {
+      const ans = state.answers[si][qi];
+      let isCorrect = false;
+      if (sec.type === 'multiselect') {
+        const ansSet = new Set(ans);
+        const corrSet = new Set(q.correct);
+        isCorrect = ansSet.size === corrSet.size && [...corrSet].every(c => ansSet.has(c));
+      } else {
+        isCorrect = ans === q.correct;
+      }
+
+      const bc = isCorrect ? '#34C759' : '#FF3B30';
+      const bg = isCorrect ? '#F0FFF4' : '#FFF5F5';
+      html += '<div style="border:1px solid #e5e5ea;border-left:5px solid ' + bc + ';border-radius:10px;padding:14px;margin-bottom:12px;background:' + bg + ';page-break-inside:avoid">';
+      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">';
+      html += '<span style="background:#007AFF;color:#fff;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;flex-shrink:0">' + (qi+1) + '</span>';
+      html += '<span style="font-weight:700;font-size:12px;color:' + (isCorrect?'#1A7A34':'#C0392B') + '">' + (isCorrect?'CORRECTA':'INCORRECTA') + '</span>';
+      html += '</div>';
+
+      if (sec.type === 'dragdrop') {
+        html += '<p style="font-size:12px;color:#333;margin-bottom:10px;line-height:1.6"><strong>Enunciado:</strong> ' + q.before + '[___]' + q.after + '</p>';
+      } else {
+        html += '<p style="font-size:12px;color:#333;margin-bottom:10px;line-height:1.6;font-weight:600">' + q.text + '</p>';
+      }
+
+      html += '<div style="margin-bottom:10px">';
+      if (sec.type === 'multiple') {
+        q.opts.forEach((opt, oi) => {
+          const isMine = ans === oi, isRight = oi === q.correct;
+          let ob='#f5f5f5',obb='#ddd',olc='#888',ol='';
+          if(isMine&&isRight){ob='#E8F8EE';obb='#34C759';olc='#1A7A34';ol='Tu respuesta — CORRECTA';}
+          else if(isMine&&!isRight){ob='#FFF0EE';obb='#FF3B30';olc='#C0392B';ol='Tu respuesta — INCORRECTA';}
+          else if(!isMine&&isRight){ob='#FFF5E6';obb='#FF9500';olc='#c07000';ol='Respuesta correcta (no seleccionada)';}
+          html += '<div style="background:'+ob+';border:1px solid '+obb+';border-radius:6px;padding:7px 10px;margin-bottom:5px">';
+          if(ol) html += '<div style="font-size:10px;font-weight:700;color:'+olc+';margin-bottom:2px">'+ol+'</div>';
+          html += '<div style="font-size:11px;color:#333">'+opt+'</div></div>';
+        });
+      } else if (sec.type === 'multiselect') {
+        const cs = new Set(q.correct);
+        q.opts.forEach((opt, oi) => {
+          const isSel=(ans||[]).includes(oi), isRight=cs.has(oi);
+          let ob='#f9f9f9',obb='#e5e5ea',olc='#aaa',ol='';
+          if(isSel&&isRight){ob='#E8F8EE';obb='#34C759';olc='#1A7A34';ol='Seleccionada — CORRECTA';}
+          if(isSel&&!isRight){ob='#FFF0EE';obb='#FF3B30';olc='#C0392B';ol='Seleccionada — INCORRECTA (no debia marcarse)';}
+          if(!isSel&&isRight){ob='#FFF5E6';obb='#FF9500';olc='#c07000';ol='No seleccionada — DEBIA MARCARSE';}
+          if(!isSel&&!isRight){ol='No seleccionada — correcto omitirla';}
+          html += '<div style="background:'+ob+';border:1px solid '+obb+';border-radius:6px;padding:7px 10px;margin-bottom:5px">';
+          if(ol) html += '<div style="font-size:10px;font-weight:700;color:'+olc+';margin-bottom:2px">'+ol+'</div>';
+          html += '<div style="font-size:11px;color:#333">'+opt+'</div></div>';
+        });
+      } else if (sec.type === 'truefalse') {
+        [{val:true,lbl:'Verdadero'},{val:false,lbl:'Falso'}].forEach(ch => {
+          const isMine=ans===ch.val, isRight=q.correct===ch.val;
+          let ob='#f5f5f5',obb='#ddd',olc='#888',ol='';
+          if(isMine&&isRight){ob='#E8F8EE';obb='#34C759';olc='#1A7A34';ol='Tu respuesta — CORRECTA';}
+          else if(isMine&&!isRight){ob='#FFF0EE';obb='#FF3B30';olc='#C0392B';ol='Tu respuesta — INCORRECTA';}
+          else if(!isMine&&isRight){ob='#FFF5E6';obb='#FF9500';olc='#c07000';ol='Respuesta correcta';}
+          html += '<div style="background:'+ob+';border:1px solid '+obb+';border-radius:6px;padding:7px 10px;margin-bottom:5px">';
+          if(ol) html += '<div style="font-size:10px;font-weight:700;color:'+olc+';margin-bottom:2px">'+ol+'</div>';
+          html += '<div style="font-size:11px;color:#333">'+ch.lbl+'</div></div>';
+        });
+      } else if (sec.type === 'dragdrop') {
+        const sa=ans||'(sin respuesta)', ok=ans===q.correct;
+        html += '<div style="background:'+(ok?'#E8F8EE':'#FFF0EE')+';border:1px solid '+(ok?'#34C759':'#FF3B30')+';border-radius:6px;padding:7px 10px;margin-bottom:5px">';
+        html += '<div style="font-size:10px;font-weight:700;color:'+(ok?'#1A7A34':'#C0392B')+';margin-bottom:2px">'+(ok?'Tu respuesta — CORRECTA':'Tu respuesta — INCORRECTA')+'</div>';
+        html += '<div style="font-size:11px;color:#333">Respondiste: <strong>'+sa+'</strong></div></div>';
+        if(!ok){
+          html += '<div style="background:#FFF5E6;border:1px solid #FF9500;border-radius:6px;padding:7px 10px;margin-bottom:5px">';
+          html += '<div style="font-size:10px;font-weight:700;color:#c07000;margin-bottom:2px">Respuesta correcta</div>';
+          html += '<div style="font-size:11px;color:#333"><strong>'+q.correct+'</strong></div></div>';
+        }
+      }
+      html += '</div>';
+      html += '<div style="background:#F0F4FF;border-left:4px solid #007AFF;border-radius:0 8px 8px 0;padding:10px 12px;font-size:11px;color:#333;line-height:1.7">';
+      html += '<strong style="color:#007AFF">Retroalimentacion:</strong> ' + q.just;
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function downloadPDF() {
+  const correctBySection = ACTIVE_SECTIONS.map((sec, si) => {
+    const c = sec.questions.filter((q, qi) => {
+      const ans = state.answers[si][qi];
+      if (sec.type === 'multiselect') {
+        const ansSet = new Set(ans); const corrSet = new Set(q.correct);
+        return ansSet.size === corrSet.size && [...corrSet].every(c => ansSet.has(c));
+      } else { return ans === q.correct; }
+    }).length;
+    return Math.round((c / sec.questions.length) * 100);
+  });
+
+  const scoreNum = document.getElementById('score-num').textContent;
+  const scoreLabel = document.getElementById('score-label').textContent;
+  const insightsData = generateInsights(ACTIVE_SECTIONS, state.answers);
+
+  let html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Retroalimentacion {{TITULO_EXAMEN}} - {{MATERIA_NOMBRE}} - '+(state.veriCode||'')+'</title>';
+  html += '<style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;padding:24px;background:#f5f5f5;color:#333;margin:0}';
+  html += '.w{max-width:920px;margin:0 auto;background:#fff;border-radius:12px;padding:28px;box-shadow:0 2px 10px rgba(0,0,0,.1)}';
+  html += '.hd{text-align:center;margin-bottom:24px;border-bottom:3px solid #007AFF;padding-bottom:18px}';
+  html += '.hd h1{margin:0 0 6px;color:#1a1a1a;font-size:24px}.hd .sub{color:#007AFF;font-size:15px;font-weight:700}.hd .auth{color:#666;font-size:12px;margin-top:4px}';
+  html += '.vc{text-align:center;margin:0 0 18px;padding:10px;background:#FFF5E6;border:2px dashed #FF9500;border-radius:10px;font-size:13px;color:#8a5300}';
+  html += '.ig{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}';
+  html += '.ib{padding:11px 14px;background:#f9f9fb;border-radius:8px;border-left:3px solid #007AFF}';
+  html += '.ib b{color:#007AFF;display:block;font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}';
+  html += '.ib span{font-size:13px;font-weight:600;color:#1a1a1a}';
+  html += '.sc{text-align:center;margin:22px 0;padding:22px;background:linear-gradient(135deg,#007AFF,#005ACC);border-radius:14px;color:#fff}';
+  html += '.sn{font-size:50px;font-weight:900;margin:6px 0;line-height:1}.sl{font-size:14px;font-weight:600;opacity:.9}';
+  html += '.st{font-size:16px;font-weight:700;color:#333;margin:22px 0 10px;padding-bottom:5px;border-bottom:2px solid #E5E5EA}';
+  html += '.cb{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:14px 0}';
+  html += '.bi{display:flex;flex-direction:column;align-items:center}';
+  html += '.ba{width:100%;height:90px;background:#E5E5EA;border-radius:5px 5px 0 0;position:relative}';
+  html += '.bf{background:linear-gradient(180deg,#007AFF,#004D99);width:100%;border-radius:5px 5px 0 0;position:absolute;bottom:0;left:0}';
+  html += '.bp{position:absolute;bottom:5px;width:100%;text-align:center;color:#1a1a1a;font-weight:700;font-size:10px}';
+  html += '.bl{font-size:9px;margin-top:5px;text-align:center;line-height:1.3;color:#333}';
+  html += '.ig2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}';
+  html += '.ins{padding:10px;border-left:4px solid;border-radius:5px}';
+  html += '.ins.high{border-color:#FF3B30;background:#FFF0EE}.ins.medium{border-color:#FF9500;background:#FFF5E6}.ins.low{border-color:#34C759;background:#E8F8EE}';
+  html += '.it{font-weight:700;font-size:11px;margin-bottom:3px}';
+  html += '.ins.high .it{color:#C0392B}.ins.medium .it{color:#C67000}.ins.low .it{color:#1A7A34}';
+  html += '.ix{font-size:10px;line-height:1.4}';
+  html += '.ins.high .ix{color:#6D2826}.ins.medium .ix{color:#6B3F00}.ins.low .ix{color:#0D5722}';
+  html += '.ft{text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #E5E5EA;font-size:11px;color:#888}';
+  html += '.va{margin:0 0 18px;padding:14px;background:#FFF0EE;border:2px solid #FF3B30;border-radius:10px;color:#8a1f1f}';
+  html += '.va b{display:block;font-size:14px;margin-bottom:4px}.va span{font-size:12px;line-height:1.5}';
+  html += '@media print{body{background:#fff;padding:8px}.w{box-shadow:none;padding:16px}}</style>';
+  html += '</head><body onload="setTimeout(function(){window.print();},800);"><div class="w">';
+  html += '<div class="hd"><img src="'+LOGO_DATA_URI+'" alt="Logo UPDS" style="width:56px;height:56px;object-fit:contain;margin:0 auto 10px;display:block"/><h1>Retroalimentacion &mdash; {{TITULO_EXAMEN}}</h1><div class="sub">{{MATERIA_NOMBRE}} ({{MATERIA_CODIGO}}) &middot; UPDS {{ANIO}}</div><div class="auth">{{FACULTAD_TEXTO}}</div></div>';
+  if(state.annulled){
+    html += '<div class="va"><b>&#9888;&#65039; EXAMEN ANULADO</b><span>'+(state.annulReason||'Se detecto un cambio de pantalla durante el examen.')+' La nota final registrada es 0. El detalle de las respuestas se incluye a continuacion unicamente para fines de revision.</span></div>';
+  }
+  html += '<div class="vc">Codigo de verificacion: <strong>'+(state.veriCode||'SIN-CODIGO')+'</strong> &mdash; sube este PDF, tal cual, a Moodle. Un PDF sin este codigo no sera calificado.</div>';
+  html += '<div class="ig"><div class="ib"><b>Estudiante</b><span>'+state.student.nombre+'</span></div>';
+  html += '<div class="ib"><b>Codigo</b><span>'+state.student.codigo+'</span></div>';
+  html += '<div class="ib"><b>Correo</b><span>'+state.student.email+'</span></div>';
+  html += '<div class="ib"><b>Fecha</b><span>'+new Date().toLocaleString('es-BO',{dateStyle:'long',timeStyle:'short'})+'</span></div></div>';
+  const pctNum = Math.round((parseInt(scoreNum) / TOTAL_QUESTIONS) * 100);
+  const nivelNum = pctNum>=80?'Avanzado':pctNum>=60?'Intermedio':pctNum>=40?'Basico':'Inicial';
+  const calidadNum = (scoreLabel.split('—')[1] || '').trim();
+  html += '<div class="sc" style="'+(state.annulled?'background:linear-gradient(135deg,#FF3B30,#B71C1C)':'')+'"><div class="sl">'+(state.annulled?'Examen Anulado':'Resultado del {{TITULO_EXAMEN}}')+'</div><div class="sn">'+pctNum+'%</div><div class="sl" style="font-size:13px;margin-top:4px">'+(state.annulled?'0 de '+TOTAL_QUESTIONS+' preguntas contabilizadas (anulado)':scoreNum+' de '+TOTAL_QUESTIONS+' preguntas correctas')+'</div><div class="sl" style="font-size:15px;margin-top:5px">'+(state.annulled?'Nota final: 0':(calidadNum+' &middot; Nivel de dominio: '+nivelNum))+'</div></div>';
+  if(!state.annulled){
+  html += '<div class="st">Desempeno por Bloque</div><div class="cb">';
+  correctBySection.forEach((pct, i) => {
+    const h = Math.max(pct, 3);
+    html += '<div class="bi"><div class="ba"><div class="bf" style="height:'+h+'%"></div><span class="bp">'+pct+'%</span></div>';
+    html += '<div class="bl">'+ACTIVE_SECTIONS[i].icon+'<br>'+ACTIVE_SECTIONS[i].title.split(' ').slice(0,2).join(' ')+'</div></div>';
+  });
+  html += '</div>';
+  }
+  html += '<div class="st">Analisis de Resultados</div><div class="ig2">';
+  insightsData.forEach(ins => {
+    html += '<div class="ins '+ins.level+'"><div class="it">'+ins.topic+'</div><div class="ix">'+ins.recommendation+'</div></div>';
+  });
+  html += '</div>';
+  html += buildDetailedFeedbackHTML();
+  html += '<div class="ft"><p>Documento generado automaticamente al entregar la evaluacion. Codigo de verificacion: '+(state.veriCode||'SIN-CODIGO')+'</p>';
+  html += '<p>{{FACULTAD_TEXTO}} &mdash; {{MATERIA_NOMBRE}} ({{MATERIA_CODIGO}}) &mdash; UPDS {{ANIO}}</p></div>';
+  html += '</div></body></html>';
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'Retroalimentacion-{{ARCHIVO_PREFIJO}}-' + state.student.codigo + '-' + (state.veriCode||'') + '.html';
+  link.click();
+}
+</script>
+
+</body>
+</html>
